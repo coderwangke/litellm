@@ -902,3 +902,30 @@ def test_public_mcp_hub_does_not_expose_upstream_url():
     assert all("url" not in item for item in data)
     assert secret_url not in response.text
     app.dependency_overrides.clear()
+
+
+def test_tencent_provider_fields():
+    """Tencent TokenHub must expose an API key plus an optional api_base that defaults
+    to the international endpoint, so the UI can pre-fill it and let mainland China
+    users override it.
+    """
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+
+    response = client.get("/public/providers/fields")
+    providers = response.json()
+
+    tencent = next((p for p in providers if p["provider"] == "Tencent"), None)
+    assert tencent is not None
+    assert tencent["litellm_provider"] == "tencent"
+    assert tencent["default_model_placeholder"] == "tencent/deepseek-v4-pro"
+
+    fields = {field["key"]: field for field in tencent["credential_fields"]}
+    assert fields["api_key"]["required"] is True
+    assert fields["api_key"]["field_type"] == "password"
+    assert fields["api_base"]["required"] is False
+    assert (
+        fields["api_base"]["default_value"]
+        == "https://tokenhub-intl.tencentcloudmaas.com/v1"
+    )

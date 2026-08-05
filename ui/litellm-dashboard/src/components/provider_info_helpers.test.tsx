@@ -94,6 +94,14 @@ describe("provider_info_helpers", () => {
       expect(result.displayName).toBe(Providers.ZAI);
     });
 
+    it("should resolve the tencent provider value to the Tencent TokenHub display name and logo", () => {
+      // /public/providers/fields advertises the `tencent` slug, but the UI had no
+      // mapping, so the dropdowns rendered the raw slug with a blank logo.
+      const result = getProviderLogoAndName("tencent");
+      expect(result.displayName).toBe(Providers.Tencent);
+      expect(result.logo).toBe(providerLogoMap[Providers.Tencent]);
+    });
+
     it("should return provider value as display name when no mapping exists", () => {
       const unknownProvider = "unknown_provider";
       const result = getProviderLogoAndName(unknownProvider);
